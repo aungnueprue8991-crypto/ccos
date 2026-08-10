@@ -1,0 +1,40 @@
+[project]
+name = "ccos"
+version = "0.3.0"
+description = "Computational Civilization Operating System — COS / COG / SCOS under constitutional governance"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic>=2.0",
+    "pydantic-settings>=2.0",
+    "ulid-py>=1.1",
+    "orjson>=3.9",
+    "httpx>=0.27",
+    "rich>=13.0",
+    "typer>=0.12",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "ruff>=0.4",
+    "mypy>=1.10",
+]
+
+[project.scripts]
+ccos = "ccos_cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["constitution", "kernel", "cognition", "evolution", "governance", "capabilities", "observatory", "agents", "hermes", "simulation"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
