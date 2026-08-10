@@ -1,1 +1,2 @@
-from .plane import FederationPlane, CivilizationInstance
+from .plane import FederationPlane
+from .civilization import CivilizationInstance
