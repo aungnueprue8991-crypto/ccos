@@ -1,9 +1,7 @@
-"""Hermes — production CCOS application / orchestrator shell (frontier wiring)."""
+"""Hermes — production CCOS application / orchestrator shell."""
 
 from __future__ import annotations
-
 from pathlib import Path
-
 from constitution.schemas.intent import Intent, IntentStatus
 from constitution.schemas.event import EventEnvelope
 from constitution.config import get_config
@@ -41,14 +39,19 @@ from agents.civilization.runtime import CivilizationRuntime
 from simulation.cosmos import ArtificialCosmos
 from simulation.physics import PhysicsCosmos
 from observatory.core import Observatory
+from capabilities.fabric.orchestrator import CapabilityFabric
+from evolution.archive.store import ExperimentArchive
+from capabilities.adapters.echo import EchoAdapter
+from capabilities.adapters.compute import ComputeAdapter
+from capabilities.gate.execution_gate import ExecutionGate
+from capabilities.adapters.runtime.invoker import CapabilityInvoker
+from evolution.n4.engine import N4RSIEngine
 from rich.console import Console
 
 console = Console()
 
 
 class Hermes:
-    """Full constitutional stack orchestrator — every plane wired."""
-
     def __init__(self, workspace: str | Path = "."):
         self.cfg = get_config(workspace)
         self.workspace = self.cfg.workspace
@@ -92,38 +95,40 @@ class Hermes:
         self.agent_runtime = AgentRuntime(self.ledger)
         self.population = PopulationManager(self.agent_runtime, self.citizens, self.ledger)
         self.civilization = CivilizationRuntime(self.population, self.organizations, self.ledger)
+
+        self.archive = ExperimentArchive(self.ledger, self.cfg.storage_dir / "experiments.db")
+        self.fabric = CapabilityFabric(
+            self.ledger, self.registry, self.governance, self.policies, self.archive,
+        )
+        self.fabric.register_adapter(EchoAdapter())
+        self.fabric.register_adapter(ComputeAdapter())
+        self.execution_gate = ExecutionGate(self.ledger, self.registry, self.auth, self.resources)
+        self.invoker = CapabilityInvoker(self.execution_gate, self.ledger)
+        self.n4 = N4RSIEngine(self.ledger, self.archive, self.governance, self.registry)
+
         self.cosmos = ArtificialCosmos(self.ledger)
         self.physics = PhysicsCosmos(self.ledger)
 
         if getattr(self.cfg, "enable_scheduler", False):
             self.scheduler.start()
 
-        self.bus.publish(
-            EventEnvelope(
-                event_type="cos.boot",
-                producer_id="cos.kernel",
-                payload={
-                    "status": "kernel_ready",
-                    "workspace": str(self.workspace.resolve()),
-                    "constitution_version": getattr(self.cfg, "constitution_version", "1.0.0"),
-                    "planes": ["cos", "cog", "scos", "governance", "agents", "simulation", "observatory", "replication"],
-                },
-            )
-        )
+        self.bus.publish(EventEnvelope(
+            event_type="cos.boot", producer_id="cos.kernel",
+            payload={"status": "kernel_ready", "workspace": str(self.workspace.resolve()),
+                     "constitution_version": getattr(self.cfg, "constitution_version", "1.0.0"),
+                     "planes": ["cos", "cog", "scos", "governance", "agents", "simulation",
+                                "observatory", "replication", "fabric", "n3", "n4"]},
+        ))
         console.print("[bold magenta]Hermes ready[/bold magenta] — full production substrate online")
 
     def submit_intent(self, issuer: str, objective: str, constraints: list[str] | None = None) -> Intent:
-        intent = Intent(
-            issuer=issuer, objective=objective, constraints=constraints or [],
-            status=IntentStatus.COMMITTED, immutable_root=True,
-        )
+        intent = Intent(issuer=issuer, objective=objective, constraints=constraints or [],
+                        status=IntentStatus.COMMITTED, immutable_root=True)
         intent.root_intent = intent.intent_id
-        self.bus.publish(
-            EventEnvelope(
-                event_type="hermes.intent", producer_id="hermes",
-                payload={"intent_id": intent.intent_id, "issuer": issuer, "objective": objective},
-            )
-        )
+        self.bus.publish(EventEnvelope(
+            event_type="hermes.intent", producer_id="hermes",
+            payload={"intent_id": intent.intent_id, "issuer": issuer, "objective": objective},
+        ))
         return intent
 
     def health(self):
