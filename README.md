@@ -1,44 +1,88 @@
 # CCOS — Computational Civilization Operating System
 
-**COS executes · COG knows · SCOS discovers · CCOS governs · Hermes orchestrates · Observatory observes**
+**COS executes · COG knows · SCOS discovers · CCOS governs · Hermes orchestrates · AGS develops · World Engine provides reality**
 
-Production-grade constitutional substrate — all planned phases complete.
+Production-grade constitutional substrate for governed multi-agent scientific civilizations.
 
-## Status v0.3
+## Architecture
 
-| Phase | Components | Status |
+```
+HUMAN / WORLD
+     │
+     ▼
+┌─────────────────────────────────────┐
+│              CCOS                    │
+│  Constitution · Governance · Ledger  │
+└──────────────────┬──────────────────┘
+                   │
+     ┌─────────────┼─────────────┐
+     ▼             ▼             ▼
+   AGS          WORLD         HERMES
+ (organisms)   (reality)   (orchestrator)
+     │             │
+     └──────┬──────┘
+            ▼
+     Evidence Packages
+            ▼
+     Knowledge / Discovery
+```
+
+## Status (v1.6)
+
+| Layer | Components | Status |
 |-------|------------|--------|
-| P0 Foundation | Constitution, schemas, ledger, guards | ✅ |
-| P1 COS Kernel | Scheduler, lifecycle, resources, IPC, diagnostics, config | ✅ |
-| P2 COG | Evidence, memory, beliefs, knowledge, world model, experience, **reasoning backend** | ✅ |
-| P3 SCOS | Hypotheses, experiments, benchmarks, promotion, rollback | ✅ |
-| P4 Governance | Decisions, citizens, orgs, policies | ✅ |
-| P5 Runtime | Hermes, CLI, tests | ✅ |
-| P6 Extended | Population, cosmos, **civilization runtime**, **physics cosmos**, **ledger replication**, **invariant monitor** | ✅ |
+| CCOS Kernel | Constitution, ledger, capabilities, governance | ✅ |
+| AGS v1.0 | Genome, memory, curiosity, modular agent | ✅ |
+| AGS v1.1 | Collective observation, 3-agent discovery | ✅ |
+| AGS v1.2 | Teaching + provenance (UNVERIFIED→VERIFIED) | ✅ |
+| AGS v1.3 | Collaboration teams, roles, evidence pool | ✅ |
+| AGS v1.4 | Research programs, hypothesis competition | ✅ |
+| AGS v1.5 | Controlled reproduction (CCOS-gated) | ✅ |
+| World Engine | Deterministic ECS, hash, snapshot, replay | ✅ |
+| World v1.6 | Scientific civilization loop, evidence packages | ✅ |
+| Adapters | Thermo, chemistry, biology, ecology, climate | ✅ |
 
-## Remaining-phase additions (this pass)
+## Hard invariants
 
-- **Reasoning backend** — Deterministic + optional HTTP LLM; outputs always UNVERIFIED (CCOS-003)
-- **Ledger replication** — multi-node append-only sync with chain verification
-- **Invariant monitor** — runtime CI checks over the ledger
-- **Civilization runtime** — institutions, role teams, task market
-- **Physics cosmos** — 2D gravity-lite simulation for SCOS experiments
-
-## Metrics
-
-- ~4300 LOC · 90 modules · **15 tests passing**
-- All critical state in SQLite WAL · hash chain verified
-- Constitutional guards enforced
+- Unknown capability → **DENY**
+- Observation ≠ ground truth
+- Experiments run on **forks**, never live world
+- Reproduction is a **transaction** (not auto-spawn)
+- Memory ≠ belief; knowledge requires verification
+- Same seed + actions → same state hash
 
 ## Quick start
 
 ```bash
-cd ccos && export PYTHONPATH=.
-python ccos_cli.py boot
-python ccos_cli.py observatory
-python -m pytest tests/ -q
+cd ccos
+pip install -r requirements.txt
+export PYTHONPATH=.
+
+# World Engine demo
+python scripts/world_engine_demo.py
+python scripts/world_v16_demo.py
+
+# Tests
+python -m pytest tests/ags/ tests/world/ -q
 ```
 
-## Honest boundary
+## Repository layout
 
-Not claimed: planetary multi-host consensus (Raft/Paxos full), live cloud LLM ops, seL4-style formal proofs, or million-agent economies. Those extend this substrate.
+```
+ccos/
+├── constitution/     # CCOS constitutional layer
+├── kernel/           # COS runtime kernel
+├── ags/              # Agent Genesis System
+│   ├── genome/ memory/ evolution/ collaboration/
+│   ├── v11/ v12/ v14/ living/ reference/
+├── world/            # World Engine
+│   ├── core/ state/ laboratory/ observation/
+│   ├── adapters/ evidence/ science/ governance/
+├── hermes/           # Orchestrator
+├── tests/
+└── scripts/
+```
+
+## License
+
+Project code — see repository terms.
