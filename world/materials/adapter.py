@@ -29,13 +29,25 @@ class MaterialsAdapter:
     def register(self, mat: Material) -> None:
         self.materials[mat.name] = mat
 
-    def strain(self, name: str, stress: float) -> float:
+    def elastic_strain(self, name: str, stress: float) -> float:
+        """Pure elastic strain σ/E — does not mutate state."""
         m = self.materials[name]
-        elastic = stress / max(m.young_modulus, 1e-9)
+        return _q(stress / max(m.young_modulus, 1e-9))
+
+    def strain(self, name: str, stress: float) -> float:
+        """Total strain = elastic(σ) + accumulated plastic. Read-only w.r.t. plastic."""
+        m = self.materials[name]
+        return _q(self.elastic_strain(name, stress) + m.plastic_strain)
+
+    def apply_stress(self, name: str, stress: float) -> float:
+        """Loading step: accumulate plastic if |σ| exceeds yield. Returns total strain."""
+        m = self.materials[name]
         if abs(stress) >= m.yield_stress:
             over = abs(stress) - m.yield_stress
-            m.plastic_strain = _q(m.plastic_strain + over / max(m.young_modulus, 1e-9))
-        return _q(elastic + m.plastic_strain)
+            m.plastic_strain = _q(
+                m.plastic_strain + over / max(m.young_modulus, 1e-9)
+            )
+        return self.strain(name, stress)
 
     def yields(self, name: str, stress: float) -> bool:
         return abs(stress) >= self.materials[name].yield_stress
