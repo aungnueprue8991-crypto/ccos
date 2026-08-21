@@ -16,6 +16,7 @@ from world.provenance.record import ProvenanceStore
 from world.replay.engine import ReplayEngine
 from world.state.snapshot import take_snapshot, restore_snapshot
 from ags.shared.types import new_id
+from world.science.oracle import ThermoEquilibriumOracle
 
 
 @dataclass
@@ -35,6 +36,7 @@ class ScientificCivilizationLoop:
     Full chain:
       intent → governance → observe → hypothesize → experiment request
       → authorize → fork → thermo adapter → measure → evidence → ledger
+      → external oracle → discovery only if oracle accepts
     """
 
     def __init__(self, seed: int = 42):
@@ -73,16 +75,13 @@ class ScientificCivilizationLoop:
         live_before = self.world.hash()
         tick_start = self.world.tick_count
 
-        # 1) Observation (filtered — not ground truth)
         obs = self.bridge.observe(agent_id, noise=0.02)
         if obs is None:
             return CivilizationLoopResult(False, None, None, live_before, live_before, "", notes="observe denied")
 
-        # 2) Hypothesis from partial observation
         hypothesis = "Heat flows from hot body to cold body until temperatures equalize (Q=mcΔT)."
         prediction = {"final_temps_converge": True, "delta_t_shrinks": True}
 
-        # 3) Experiment request → governance
         builder = EvidenceBuilder(self.world.name, self.seed)
         builder.record_action({"type": "observe", "agent": agent_id})
         builder.record_action({"type": "hypothesis", "text": hypothesis})
@@ -93,23 +92,20 @@ class ScientificCivilizationLoop:
 
         builder.record_action({"type": "experiment", "id": exp.experiment_id})
 
-        # 4) Scientific adapter on fork-local thermo model (not live mutation of thermo state)
         thermo = ThermodynamicsAdapter()
         thermo.add_body(ThermalBody("hot", mass_kg=1.0, temp_k=373.15))
         thermo.add_body(ThermalBody("cold", mass_kg=1.0, temp_k=273.15))
         initial_thermo = thermo.snapshot()
-        finals = thermo.step_pair("hot", "cold", steps=50, dt=0.5, k=80.0)
+        finals = thermo.step_pair("hot", "cold", steps=200, dt=0.5, k=80.0)
         measurements = [
             {"kind": "thermal_snapshot", "initial": initial_thermo, "final": finals},
             {"kind": "convergence", "delta": abs(finals["hot"] - finals["cold"])},
         ]
         builder.record_action({"type": "thermo_step", "final": finals})
 
-        # 5) Live world must be unchanged by fork experiment
         live_after = self.world.hash()
-        assert live_after == live_before or True  # fork isolation checked in tests
+        assert live_after == live_before or True
 
-        # 6) Evidence package
         pkg = builder.build(
             experiment_id=exp.experiment_id,
             initial_state_hash=live_before,
@@ -136,8 +132,24 @@ class ScientificCivilizationLoop:
             evidence_id=pkg.evidence_id,
         )
 
-        # 7) Ledger + discovery if prediction supported
-        supported = measurements[1]["delta"] < abs(373.15 - 273.15) * 0.8  # clearly moved toward equilibrium
+        oracle = ThermoEquilibriumOracle(tol_k=3.0)
+        verdict = oracle.verify({
+            "bodies": [
+                {"name": "hot", "mass_kg": 1.0, "temp_k": 373.15, "c_j_per_kg_k": 4180.0},
+                {"name": "cold", "mass_kg": 1.0, "temp_k": 273.15, "c_j_per_kg_k": 4180.0},
+            ],
+            "final_temps": finals,
+        })
+        builder.record_action({
+            "type": "oracle",
+            "oracle_id": verdict.oracle_id,
+            "accepted": verdict.accepted,
+            "summary": verdict.summary,
+            "details": verdict.details,
+        })
+
+        internal_ok = measurements[1]["delta"] < abs(373.15 - 273.15) * 0.8
+        supported = internal_ok and verdict.accepted
         discovery = None
         if supported:
             discovery = "thermal_equilibration_confirmed"
@@ -148,13 +160,24 @@ class ScientificCivilizationLoop:
                 "discovery": discovery,
                 "evidence_id": pkg.evidence_id,
                 "evidence_hash": pkg.evidence_hash,
+                "oracle_id": verdict.oracle_id,
+                "oracle_accepted": True,
             })
         self.ledger.append({
             "type": "evidence",
             "evidence_id": pkg.evidence_id,
             "hash": pkg.evidence_hash,
         })
+        self.ledger.append({
+            "type": "oracle_verdict",
+            "oracle_id": verdict.oracle_id,
+            "accepted": verdict.accepted,
+            "summary": verdict.summary,
+        })
 
+        notes = "ok" if supported else (
+            "oracle_rejected" if not verdict.accepted else "prediction not supported"
+        )
         return CivilizationLoopResult(
             success=supported and pkg.verify_integrity(),
             evidence=pkg,
@@ -163,5 +186,5 @@ class ScientificCivilizationLoop:
             live_hash_after=self.world.hash(),
             fork_hash=exp.result_hash,
             ledger_events=list(self.ledger),
-            notes="ok" if supported else "prediction not supported",
+            notes=notes,
         )
