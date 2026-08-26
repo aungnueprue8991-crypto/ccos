@@ -1,109 +1,82 @@
-"""Verdict Engine — map evidence to VerdictKind; never trust model confidence alone."""
+"""Verdict Engine — combine verifier results into epistemic status.
+
+CONFIDENCE ≠ EVIDENCE. Model confidence never upgrades verdict alone.
+"""
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 from world.realitycheck.types import Claim, RealityVerdict, VerdictKind
+from world.realitycheck.verifiers import VerifyResult
 
 
 class VerdictEngine:
     def decide(
         self,
         claim: Claim,
-        *,
-        observed: Optional[Dict[str, Any]] = None,
-        expected: Optional[Dict[str, Any]] = None,
-        thresholds: Optional[Dict[str, float]] = None,
-        source_supported: bool = False,
-        reproduced: bool = False,
-        falsified: bool = False,
-        evidence: Optional[List[str]] = None,
-        notes: str = "",
-        experiment_id: Optional[str] = None,
+        code: Optional[VerifyResult] = None,
+        reproduction: Optional[VerifyResult] = None,
+        adversarial: Optional[VerifyResult] = None,
+        source: Optional[VerifyResult] = None,
+        benchmark: Optional[VerifyResult] = None,
     ) -> RealityVerdict:
-        evidence = list(evidence or [])
-        observed = observed or {}
-        expected = expected or {}
-        thresholds = thresholds or {}
+        notes: List[str] = []
+        chain: List[str] = []
+        measurements = {}
+        criteria_met = {}
 
-        if falsified:
-            return RealityVerdict(
-                claim_id=claim.claim_id,
-                kind=VerdictKind.FALSIFIED,
-                evidence=evidence or ["falsified_by_experiment"],
-                metrics=observed,
-                notes=notes or "evidence contradicts claim",
-                experiment_id=experiment_id,
-            )
+        if code:
+            chain.append(f"code:{code.passed}")
+            measurements.update(code.measurements)
+            notes.extend(code.notes)
+        if reproduction:
+            chain.append(f"reproduction:{reproduction.passed}")
+            measurements.update({f"repro_{k}": v for k, v in reproduction.measurements.items()})
+            notes.extend(reproduction.notes)
+        if adversarial:
+            chain.append(f"adversarial:{adversarial.passed}")
+            notes.extend(adversarial.notes)
+        if source:
+            chain.append(f"source:{source.passed}")
+            measurements["source_support"] = source.measurements.get("source_support", 0.0)
+            notes.extend(source.notes)
+        if benchmark:
+            chain.append(f"benchmark:{benchmark.passed}")
+            measurements.update(benchmark.measurements)
 
-        if not observed and not source_supported:
-            return RealityVerdict(
-                claim_id=claim.claim_id,
-                kind=VerdictKind.UNVERIFIED,
-                evidence=evidence,
-                metrics={},
-                notes=notes or "insufficient evidence",
-                experiment_id=experiment_id,
-            )
+        # Explicit: ignore claim.confidence_model for verdict kind
+        notes.append(f"model_confidence_ignored={claim.confidence_model}")
 
-        if observed and expected:
-            ok = True
-            for k, exp_v in expected.items():
-                if k not in observed:
-                    ok = False
-                    break
-                thr = thresholds.get(k)
-                if thr is not None:
-                    try:
-                        if abs(float(observed[k]) - float(exp_v)) > float(thr):
-                            ok = False
-                            break
-                    except (TypeError, ValueError):
-                        if observed[k] != exp_v:
-                            ok = False
-                            break
-                elif observed[k] != exp_v:
-                    ok = False
-                    break
-            if ok:
-                kind = (
-                    VerdictKind.REPRODUCTION_VERIFIED
-                    if reproduced
-                    else VerdictKind.IMPLEMENTATION_VERIFIED
-                )
-                return RealityVerdict(
-                    claim_id=claim.claim_id,
-                    kind=kind,
-                    evidence=evidence or ["metrics_within_threshold"],
-                    metrics=observed,
-                    notes=notes,
-                    experiment_id=experiment_id,
-                )
-            return RealityVerdict(
-                claim_id=claim.claim_id,
-                kind=VerdictKind.INCONCLUSIVE,
-                evidence=evidence or ["metrics_mismatch"],
-                metrics=observed,
-                notes=notes or "observed did not match expected",
-                experiment_id=experiment_id,
-            )
+        kind = VerdictKind.INCONCLUSIVE
+        if code and code.passed and reproduction and reproduction.passed and (adversarial is None or adversarial.passed):
+            kind = VerdictKind.REPRODUCTION_VERIFIED
+        elif code and code.passed and (adversarial is None or adversarial.passed):
+            kind = VerdictKind.IMPLEMENTATION_VERIFIED
+        elif code and not code.passed:
+            kind = VerdictKind.FALSIFIED
+        elif adversarial and not adversarial.passed:
+            kind = VerdictKind.ADVERSARIAL_FAIL
+        elif source and source.passed and not code:
+            kind = VerdictKind.SOURCE_SUPPORTED
+        elif claim.kind.value == "SPECULATION" and not code:
+            kind = VerdictKind.SPECULATION
+        elif not code:
+            kind = VerdictKind.HYPOTHESIS
 
-        if source_supported:
-            return RealityVerdict(
-                claim_id=claim.claim_id,
-                kind=VerdictKind.SOURCE_SUPPORTED,
-                evidence=evidence or ["external_source"],
-                metrics=observed,
-                notes=notes,
-                experiment_id=experiment_id,
-            )
+        # criteria map from code notes if present
+        for n in notes:
+            if n.startswith("criteria="):
+                criteria_met["parsed"] = True
 
         return RealityVerdict(
             claim_id=claim.claim_id,
-            kind=VerdictKind.HYPOTHESIS,
-            evidence=evidence,
-            metrics=observed,
-            notes=notes or "claim remains a hypothesis",
-            experiment_id=experiment_id,
+            kind=kind,
+            measurements=measurements,
+            criteria_met=criteria_met,
+            reproduction_pass=bool(reproduction and reproduction.passed),
+            adversarial_pass=bool(adversarial is None or adversarial.passed),
+            source_support=float(measurements.get("source_support", 0.0)),
+            notes=notes,
+            evidence_chain=chain,
         )
