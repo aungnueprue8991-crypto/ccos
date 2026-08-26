@@ -1,0 +1,52 @@
+%% NEXUS anomaly → discovery control loop
+stateDiagram-v2
+    direction TB
+
+    [*] --> Observation
+    Observation --> AnomalyCheck: prediction mismatch
+    AnomalyCheck --> NormalFlow: below threshold
+    AnomalyCheck --> BroadcastAnomaly: score ≥ threshold
+
+    NormalFlow --> Observation: continue monitoring
+
+    state BroadcastAnomaly {
+        [*] --> FanOut
+        FanOut --> QuestionState
+        FanOut --> PatternState
+        FanOut --> MemoryRecall
+        FanOut --> CuriosityBoost
+    }
+
+    QuestionState --> Reframe: question about the question
+    Reframe --> HypothesisSpace
+
+    PatternState --> StructureFound: recurring motif
+    MemoryRecall --> SimilarPastCases: retrieval
+    CuriosityBoost --> SearchExpansion: exploration pressure
+
+    StructureFound --> HypothesisSpace
+    SimilarPastCases --> HypothesisSpace
+    SearchExpansion --> HypothesisSpace
+
+    HypothesisSpace --> TheoryCompetition: ≥2 candidates
+    TheoryCompetition --> Prediction
+    Prediction --> Simulation: mental rollout
+    Simulation --> Experiment: discriminating test
+
+    Experiment --> Evidence: CCOS world + oracle
+    Evidence --> EvidenceGate
+
+    EvidenceGate --> Support: confirms
+    EvidenceGate --> Falsify: contradicts
+    EvidenceGate --> Inconclusive: unclear
+
+    Falsify --> HypothesisEvolution
+    HypothesisEvolution --> HypothesisSpace
+
+    Support --> Abstraction
+    Abstraction --> Transfer
+    Transfer --> MemoryUpdate
+    MemoryUpdate --> MetaCognition
+    MetaCognition --> Observation
+
+    Inconclusive --> QuestionState

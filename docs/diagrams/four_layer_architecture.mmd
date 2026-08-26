@@ -1,0 +1,57 @@
+%% NEXUS + CCOS four-layer architecture with routing fan-out
+flowchart TB
+  subgraph L0[Layer 0 — Reality Interface]
+    MM[Multimodal Input]
+    BIND[Binding Engine]
+    MM --> BIND
+  end
+
+  subgraph L1[Layer 1 — CCOS Substrate]
+    OBS[Observation Engine]
+    BUS[Event Bus / Ledger]
+    MEM[Universal Hybrid Memory]
+    TOOLS[Tool Service]
+    GOV[Governance]
+    EVD[Evidence Store]
+    BIND --> OBS
+    OBS --> BUS
+    BUS --> MEM
+    GOV --> TOOLS
+  end
+
+  subgraph L2[Layer 2 — NEXUS Cognition]
+    HEART[Cognitive Heart]
+    DRV[Drives / Attention]
+    TH[Thought Field]
+    Q[Question / Pattern / Analogy]
+    HYP[Hypothesis / Theory Competition]
+    SIM[Simulation]
+    EXP[Experiment Manager]
+    GATE[Evidence Gate]
+    ABS[Abstraction / Transfer]
+    SER[Serendipity / Novelty]
+    BUS --> HEART
+    HEART --> DRV --> TH
+    TH --> Q --> HYP
+    HYP --> SIM --> EXP
+    EXP --> TOOLS
+    TOOLS --> EVD --> GATE
+    GATE -->|support| ABS
+    GATE -->|falsify| HYP
+    GATE -->|inconclusive| Q
+    MEM --> SER --> TH
+    ABS --> MEM
+  end
+
+  subgraph L3[Layer 3 — Cognitive Evolution]
+    META[Meta-Cognition / Policy]
+    CUR[Curriculum]
+    EVO[Strategy Evolution]
+    DREAM[Offline Dream]
+    META --> DRV
+    META --> TH
+    DREAM --> HYP
+    EVO --> DRV
+    MEM --> META
+    MEM --> DREAM
+  end

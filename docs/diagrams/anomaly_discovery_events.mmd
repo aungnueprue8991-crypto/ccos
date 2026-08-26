@@ -1,0 +1,29 @@
+%% NEXUS — same loop with explicit event names on transitions
+%% Pairs with nexus/routing/ecology.py and activation rules
+
+stateDiagram-v2
+    direction LR
+
+    [*] --> Observation
+
+    Observation --> AnomalyCheck: observation.received
+    AnomalyCheck --> BroadcastAnomaly: anomaly.detected
+    AnomalyCheck --> Observation: (below threshold)
+
+    BroadcastAnomaly --> ThoughtQuestion: engine.wake
+    ThoughtQuestion --> HypothesisSpace: thought.emitted / question.emitted
+    HypothesisSpace --> TheoryCompetition: hypothesis.proposed
+    TheoryCompetition --> Experiment: theory.competition
+    Experiment --> EvidenceGate: experiment.requested → evidence.assessed
+
+    EvidenceGate --> Support: evidence.support
+    EvidenceGate --> Falsify: evidence.falsify
+    EvidenceGate --> Inconclusive: evidence.inconclusive
+
+    Falsify --> HypothesisSpace: hypothesis.evolved
+    Support --> Abstraction: abstraction.formed
+    Abstraction --> Transfer: transfer.applied
+    Transfer --> MetaCognition: memory.updated
+    MetaCognition --> Observation: routing.policy_update
+
+    Inconclusive --> ThoughtQuestion: reopen
