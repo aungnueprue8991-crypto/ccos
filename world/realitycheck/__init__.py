@@ -1,1 +1,51 @@
-"""RealityCheck — CCOS epistemic authority.\n\nNEXUS may speculate; only RealityCheck promotes knowledge.\n"""\n\nfrom world.realitycheck.authority import RealityAuthority\nfrom world.realitycheck.protocol import ProtocolChecklist, ProtocolRunner, ProtocolVerdict\nfrom world.realitycheck.types import Claim, ExperimentSpec, RealityVerdict, VerdictKind\n\n__all__ = [\n    "RealityAuthority",\n    "ProtocolChecklist",\n    "ProtocolRunner",\n    "ProtocolVerdict",\n    "Claim",\n    "ExperimentSpec",\n    "RealityVerdict",\n    "VerdictKind",\n]\n
+"""RealityCheck — CCOS epistemic authority.
+
+NEXUS may speculate; only RealityCheck promotes knowledge.
+Chain-of-Evidence style: claim → plan → experiment → verify → verdict → ledger.
+"""
+
+from world.realitycheck.types import (
+    Claim,
+    ClaimKind,
+    ExperimentSpec,
+    RealityVerdict,
+    VerdictKind,
+)
+from world.realitycheck.registry import ClaimRegistry
+from world.realitycheck.parser import ClaimParser
+from world.realitycheck.planner import EvidencePlanner
+from world.realitycheck.compiler import ExperimentCompiler
+from world.realitycheck.verifiers import (
+    CodeVerifier,
+    BenchmarkEngine,
+    ReproductionEngine,
+    AdversarialVerifier,
+    SourceValidator,
+    DependencyVerifier,
+)
+from world.realitycheck.verdict import VerdictEngine
+from world.realitycheck.authority import RealityAuthority
+from world.realitycheck.protocol import ProtocolChecklist, ProtocolRunner, ProtocolVerdict
+
+__all__ = [
+    "Claim",
+    "ClaimKind",
+    "ExperimentSpec",
+    "RealityVerdict",
+    "VerdictKind",
+    "ClaimRegistry",
+    "ClaimParser",
+    "EvidencePlanner",
+    "ExperimentCompiler",
+    "CodeVerifier",
+    "BenchmarkEngine",
+    "ReproductionEngine",
+    "AdversarialVerifier",
+    "SourceValidator",
+    "DependencyVerifier",
+    "VerdictEngine",
+    "RealityAuthority",
+    "ProtocolChecklist",
+    "ProtocolRunner",
+    "ProtocolVerdict",
+]
