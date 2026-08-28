@@ -1,3 +1,3 @@
-from nexus.metacognition.self_model import MetaCognition
+from nexus.metacognition.policy import RoutingPolicy
 
-__all__ = ["MetaCognition"]
+__all__ = ["RoutingPolicy"]

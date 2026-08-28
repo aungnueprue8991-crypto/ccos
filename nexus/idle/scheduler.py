@@ -10,17 +10,11 @@ from typing import Any, Dict, List, Optional
 class IdleTask:
     name: str
     priority: float
-    kind: str  # research|efficiency|memory|serendipity|health
+    kind: str
     payload: Dict[str, Any] = field(default_factory=dict)
 
 
 class IdleCognitionScheduler:
-    """
-    Priority order (blueprint):
-    user > health > maintenance > research > self-improve > consolidation
-    > efficiency > cross-domain > serendipity > long-horizon
-    """
-
     BASE = {
         "health": 1.0,
         "maintenance": 0.9,

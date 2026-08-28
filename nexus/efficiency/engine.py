@@ -1,4 +1,4 @@
-"""Efficiency Engine — capability / cost ratio tracking and recommendations."""
+"""Efficiency Engine — permanent drive to improve capability/resource ratio."""
 
 from __future__ import annotations
 
