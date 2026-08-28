@@ -70,7 +70,10 @@ class SemanticMemory:
         return item_id
 
     def retrieve(
-        self, domain: Optional[str] = None, min_confidence: float = 0.0, limit: int = 20
+        self,
+        domain: Optional[str] = None,
+        min_confidence: float = 0.0,
+        limit: int = 20,
     ) -> List[KnowledgeItem]:
         sql = "SELECT * FROM knowledge WHERE agent_id=? AND confidence>=?"
         params: list = [self.agent_id, min_confidence]

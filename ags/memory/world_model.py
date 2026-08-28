@@ -79,7 +79,11 @@ class WorldModel:
         return [dict(r) for r in rows]
 
     def make_prediction(
-        self, entity: str, prop: str, predicted_value: Any, confidence: float = 0.5
+        self,
+        entity: str,
+        prop: str,
+        predicted_value: Any,
+        confidence: float = 0.5,
     ) -> str:
         pred_id = new_id()
         self._pending_predictions.append({
@@ -125,7 +129,11 @@ class WorldModel:
         return errors
 
     def assert_causal(
-        self, cause: str, effect: str, confidence: float = 0.4, evidence: Optional[List[str]] = None
+        self,
+        cause: str,
+        effect: str,
+        confidence: float = 0.4,
+        evidence: Optional[List[str]] = None,
     ) -> None:
         self.assert_fact(f"causal:{cause}", "causes", effect, confidence, evidence)
 

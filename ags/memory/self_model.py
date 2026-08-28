@@ -51,7 +51,12 @@ class SelfModel:
                 evidence,
             )
         else:
-            self._upsert(dimension, value, description, [evidence_id] if evidence_id else [])
+            self._upsert(
+                dimension,
+                value,
+                description,
+                [evidence_id] if evidence_id else [],
+            )
 
     def get(self, dimension: str) -> Optional[float]:
         row = self._get_entry(dimension)
