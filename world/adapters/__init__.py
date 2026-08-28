@@ -5,6 +5,7 @@ from .chemistry import ChemistryAdapter, Reaction
 from .biology import BiologyAdapter, Population
 from .ecology import EcologyAdapter
 from .climate import ClimateAdapter
+from .physics import apply_impulse, apply_force, PhysicsAdapter
 
 __all__ = [
     "ThermodynamicsAdapter",
@@ -15,4 +16,7 @@ __all__ = [
     "Population",
     "EcologyAdapter",
     "ClimateAdapter",
+    "apply_impulse",
+    "apply_force",
+    "PhysicsAdapter",
 ]

@@ -1,8 +1,4 @@
-"""Physics adapter — Newtonian impulses, drag, and simple gravity on ECS entities.
-
-Not a full engine: operates on World entities with Velocity/Mass/Transform components.
-All writes are quantized for deterministic hashing.
-"""
+"""Physics adapter — Newtonian impulses, drag, and simple gravity on ECS entities."""
 
 from __future__ import annotations
 
@@ -44,7 +40,6 @@ def apply_force(
     fz: float = 0.0,
     dt: float = 1.0,
 ) -> bool:
-    """F = ma → Δv = (F/m) dt."""
     e = world.get(entity_id)
     if not e:
         return False
@@ -57,8 +52,6 @@ def apply_force(
 
 
 class PhysicsAdapter:
-    """Deterministic multi-body helpers bound to a World instance."""
-
     def __init__(self, world: World, gravity: Tuple[float, float, float] = (0.0, -9.81, 0.0)):
         self.world = world
         self.gravity = gravity
@@ -68,15 +61,11 @@ class PhysicsAdapter:
         self.gravity = (gx, gy, gz)
 
     def integrate(self, dt: float = 0.1) -> Dict[str, int]:
-        """Semi-implicit Euler: v += g·dt (+ drag); x += v·dt. Quantized."""
         moved = 0
         gx, gy, gz = self.gravity
-        store = getattr(self.world, "_entities", None) or getattr(self.world, "entities", {})
-        if not isinstance(store, dict):
-            return {"moved": 0}
-        for eid, ent in store.items():
-            v = ent.get(Velocity) if hasattr(ent, "get") else None
-            t = ent.get(Transform) if hasattr(ent, "get") else None
+        for eid, ent in self.world.entities.items():
+            v = ent.get(Velocity)
+            t = ent.get(Transform)
             if not v or not t:
                 continue
             v.vx = _q(v.vx + gx * dt)
