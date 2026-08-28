@@ -27,7 +27,7 @@ class DriveName(str, Enum):
 @dataclass
 class DriveSignal:
     name: DriveName
-    intensity: float
+    intensity: float  # 0..1
     rationale: str = ""
     payload: Dict[str, Any] = field(default_factory=dict)
 
@@ -126,18 +126,18 @@ class StructuralFingerprint:
     features: Dict[str, float]
     labels: List[str] = field(default_factory=list)
 
-    def distance(self, other: "StructuralFingerprint") -> float:
-        keys = set(self.features) | set(other.features)
-        if not keys:
-            return 1.0
-        acc = 0.0
-        for k in keys:
-            acc += abs(self.features.get(k, 0.0) - other.features.get(k, 0.0))
-        return acc / len(keys)
+    def distance(self, other: "StructuralFingerprint", metric: str = "l1") -> float:
+        from nexus.patterns.similarity import distance as _dist
+        return _dist(self, other, metric=metric)
+
+    def similarity(self, other: "StructuralFingerprint", metric: str = "l1") -> float:
+        from nexus.patterns.similarity import similarity as _sim
+        return _sim(self, other, metric=metric)
 
 
 @dataclass
 class QVector:
+    """Multidimensional self-model (blueprint §15)."""
     capability: float = 0.5
     confidence: float = 0.5
     uncertainty: float = 0.5
@@ -182,3 +182,74 @@ class StrategyGenome:
     traits: Dict[str, float] = field(default_factory=dict)
     fitness: float = 0.0
     archive_cell: Optional[str] = None
+
+
+class ThoughtKind(str, Enum):
+    ASSOCIATION = "association"
+    ANALOGY = "analogy"
+    PATTERN = "pattern"
+    COUNTERFACTUAL = "counterfactual"
+    RECOMBINATION = "recombination"
+    REFRAME = "reframe"
+    QUESTION = "question"
+    SURPRISE = "surprise"
+    SERENDIPITY = "serendipity"
+    MEMORY = "memory"
+
+
+@dataclass
+class Thought:
+    """A possibility — not a claim of truth."""
+    thought_id: str = field(default_factory=new_id)
+    kind: ThoughtKind = ThoughtKind.ASSOCIATION
+    content: str = ""
+    source: str = ""
+    salience: float = 0.5
+    novelty: float = 0.5
+    linked_ids: List[str] = field(default_factory=list)
+    domain: str = "general"
+    payload: Dict[str, Any] = field(default_factory=dict)
+    created_at: float = field(default_factory=now_ts)
+
+    def to_dict(self) -> Dict[str, Any]:
+        d = asdict(self)
+        d["kind"] = self.kind.value
+        return d
+
+
+@dataclass
+class ReasoningResult:
+    """What follows from thoughts — still provisional until evidence."""
+    result_id: str = field(default_factory=new_id)
+    method: str = "abduction"
+    premises: List[str] = field(default_factory=list)
+    conclusion: str = ""
+    confidence: float = 0.5
+    falsifiers: List[str] = field(default_factory=list)
+    predictions: Dict[str, Any] = field(default_factory=dict)
+    thought_ids: List[str] = field(default_factory=list)
+    critiques: List[str] = field(default_factory=list)
+
+
+@dataclass
+class Concept:
+    concept_id: str = field(default_factory=new_id)
+    name: str = ""
+    definition: str = ""
+    necessary_properties: List[str] = field(default_factory=list)
+    examples: List[str] = field(default_factory=list)
+    counterexamples: List[str] = field(default_factory=list)
+    predicted_domains: List[str] = field(default_factory=list)
+    mechanism: str = ""
+    confidence: float = 0.4
+
+
+@dataclass
+class CompetingTheory:
+    theory_id: str = field(default_factory=new_id)
+    statement: str = ""
+    prior: float = 0.33
+    posterior: float = 0.33
+    predictions: Dict[str, Any] = field(default_factory=dict)
+    supporting: List[str] = field(default_factory=list)
+    contradicting: List[str] = field(default_factory=list)
