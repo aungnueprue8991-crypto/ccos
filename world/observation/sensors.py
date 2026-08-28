@@ -1,4 +1,4 @@
-"""Observation ≠ ground truth — noise, occlusion, limited range."""
+"""Observation sensors — partial, noisy views (observation ≠ ground truth)."""
 
 from __future__ import annotations
 

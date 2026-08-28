@@ -2,15 +2,14 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Any, Dict, Optional, Type, TypeVar
+from dataclasses import dataclass
+from typing import Dict, Optional, Type, TypeVar
 
 T = TypeVar("T")
 
 
 @dataclass
 class Component:
-    """Base marker for components — subclasses hold data."""
     pass
 
 

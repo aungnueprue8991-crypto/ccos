@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-import copy
 from typing import Any, Dict, TYPE_CHECKING
 
 from world.core.entity import (
-    Entity, Transform, Velocity, Mass, Energy, Label, ResourceStock, Component,
+    Entity, Transform, Velocity, Mass, Energy, Label, ResourceStock,
 )
 
 if TYPE_CHECKING:

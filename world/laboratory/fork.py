@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-import copy
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
 from world.core.world import World
-from world.core.entity import Transform, Velocity, Mass, Energy, Label
+from world.core.entity import Transform, Velocity, Energy
 from world.state.snapshot import take_snapshot, restore_snapshot
-from world.state.hashing import state_hash, canonical_state
 from ags.shared.types import new_id, now_ts
 
 
@@ -26,7 +24,7 @@ class ExperimentResult:
 
 
 class WorldFork:
-    """Isolated copy-on-write style fork (full snapshot clone in Phase 1)."""
+    """Isolated snapshot clone for experiments."""
 
     def __init__(self, parent: World, fork_id: Optional[str] = None):
         self.fork_id = fork_id or new_id()

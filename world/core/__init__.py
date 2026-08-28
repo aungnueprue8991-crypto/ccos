@@ -1,2 +1,2 @@
-from .world import World
-from .entity import Entity, Component
+from world.core.world import World
+from world.core.entity import Entity

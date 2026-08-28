@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Callable, Dict, List, Optional, Type
 
-from world.core.entity import Entity, Component, Transform, Velocity, Mass, Energy, Label, ResourceStock
+from world.core.entity import Entity, Component
 from world.core.systems import DEFAULT_SYSTEMS
 from world.state.hashing import canonical_state, state_hash
 
@@ -57,7 +57,6 @@ class World:
         return out
 
     def tick(self, dt: float = 1.0) -> str:
-        """Advance world; return canonical state hash."""
         self.tick_count += 1
         self.resources["time"] = round(self.resources["time"] + dt, 6)
         for system in self.systems:

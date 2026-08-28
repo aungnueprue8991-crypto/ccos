@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 from world.core.entity import Transform, Velocity, Mass, Energy
 
@@ -11,7 +11,6 @@ if TYPE_CHECKING:
 
 
 def movement_system(world: "World", dt: float) -> None:
-    """Integrate velocity into position — fixed order by entity id."""
     for eid in sorted(world.entities.keys()):
         e = world.entities[eid]
         if not e.active:
@@ -35,7 +34,6 @@ def energy_decay_system(world: "World", dt: float) -> None:
 
 
 def gravity_system(world: "World", dt: float) -> None:
-    """Simple downward acceleration if mass present."""
     g = world.resources.get("gravity", 9.81)
     for eid in sorted(world.entities.keys()):
         e = world.entities[eid]

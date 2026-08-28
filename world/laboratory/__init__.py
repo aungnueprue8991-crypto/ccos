@@ -1,1 +1,1 @@
-from .fork import WorldFork, Laboratory
+from world.laboratory.fork import Laboratory, WorldFork, ExperimentResult
