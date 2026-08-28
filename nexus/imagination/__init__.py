@@ -1,3 +1,3 @@
-from nexus.imagination.simulator import ImaginationEngine
+from nexus.imagination.simulator import ImaginationEngine, ImaginedOutcome
 
-__all__ = ["ImaginationEngine"]
+__all__ = ["ImaginationEngine", "ImaginedOutcome"]
