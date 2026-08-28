@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict
+from typing import Dict, List, Optional
 
 
 @dataclass
@@ -18,10 +18,16 @@ class EmergenceClaim:
     evidence: Dict[str, str] = field(default_factory=dict)
 
     def accepted(self) -> bool:
-        return all([
-            self.not_hardcoded, self.appears_through_interaction, self.measurable,
-            self.transfers, self.survives_ablation, self.reproduces,
-        ])
+        return all(
+            [
+                self.not_hardcoded,
+                self.appears_through_interaction,
+                self.measurable,
+                self.transfers,
+                self.survives_ablation,
+                self.reproduces,
+            ]
+        )
 
 
 class EmergenceDetector:
