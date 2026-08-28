@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import random
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional
+from typing import Callable, Dict, List, Optional
 
 from world.realitycheck.types import ExperimentSpec
 
@@ -18,8 +18,6 @@ class VerifyResult:
 
 
 class CodeVerifier:
-    """Run a sandbox metric function; never trusts model confidence."""
-
     def verify(
         self,
         spec: ExperimentSpec,
@@ -116,8 +114,6 @@ class AdversarialVerifier:
 
 
 class SourceValidator:
-    """Literature/source support — lab stub: keyword trust scores, not web truth."""
-
     def validate(self, statement: str, known_sources: Optional[List[str]] = None) -> VerifyResult:
         known_sources = known_sources or []
         score = 0.0
@@ -126,7 +122,9 @@ class SourceValidator:
             if any(w in statement.lower() for w in s.lower().split()[:3]):
                 score = max(score, 0.6)
                 notes.append(f"overlap:{s[:40]}")
-        return VerifyResult("source", score >= 0.5, measurements={"source_support": score}, notes=notes or ["no_source"])
+        return VerifyResult(
+            "source", score >= 0.5, measurements={"source_support": score}, notes=notes or ["no_source"]
+        )
 
 
 class DependencyVerifier:

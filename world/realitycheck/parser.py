@@ -9,17 +9,6 @@ from world.realitycheck.types import Claim, ClaimKind
 
 
 class ClaimParser:
-    """Extract measurable metrics from hypothesis text when possible."""
-
-    METRIC_PATTERNS = [
-        (r"reduc(?:e|es|ing)\s+(\w+(?:\s+\w+)?)\s+by\s+(\d+(?:\.\d+)?)%?", "reduce"),
-        (r"increase[s]?\s+(\w+(?:\s+\w+)?)\s+by\s+(\d+(?:\.\d+)?)%?", "increase"),
-        (r"(\w+)\s*[≥>=]+\s*(\d+(?:\.\d+)?)%?", "ge"),
-        (r"(\w+)\s*[≤<=]+\s*(\d+(?:\.\d+)?)%?", "le"),
-        (r"accuracy\s+(?:loss\s+)?[<>≤≥=]+\s*(\d+(?:\.\d+)?)%?", "accuracy_bound"),
-        (r"compression\s*[≥>=]+\s*(\d+(?:\.\d+)?)%?", "compression"),
-    ]
-
     def parse(
         self,
         text: str,
@@ -33,7 +22,6 @@ class ClaimParser:
         baseline = dict(baseline or {})
         variables: List[str] = []
 
-        # structured metrics from text
         m = re.search(r"compression[^\d]*(\d+(?:\.\d+)?)\s*%", text, re.I)
         if m and "compression_ratio" not in metrics:
             metrics["compression_ratio_min"] = float(m.group(1)) / 100.0
@@ -61,5 +49,5 @@ class ClaimParser:
             baseline=baseline,
             variables=variables or ["outcome"],
             source=source,
-            confidence_model=model_confidence,  # stored but never treated as evidence
+            confidence_model=model_confidence,
         )

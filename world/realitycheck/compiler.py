@@ -1,8 +1,8 @@
-"""Claim → Experiment Compiler — formal proposition to runnable experiment design."""
+"""Claim → Experiment Compiler."""
 
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Dict
 
 from world.realitycheck.parser import ClaimParser
 from world.realitycheck.planner import EvidencePlanner
@@ -11,10 +11,6 @@ from world.realitycheck.types import Claim, ExperimentSpec
 
 
 class ExperimentCompiler:
-    """
-    CLAIM → FORMAL PROPOSITION → SUCCESS CRITERIA → BASELINE → EXPERIMENT DESIGN
-    """
-
     def __init__(self, registry: ClaimRegistry | None = None):
         self.registry = registry or ClaimRegistry()
         self.parser = ClaimParser()

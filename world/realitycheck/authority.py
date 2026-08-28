@@ -1,4 +1,4 @@
-"""RealityAuthority — public API for NEXUS; writes evidence chain to EventLedger when available."""
+"""RealityAuthority — public API for NEXUS; writes evidence chain when ledger available."""
 
 from __future__ import annotations
 
@@ -6,9 +6,9 @@ from typing import Any, Callable, Dict, List, Optional
 
 from world.realitycheck.compiler import ExperimentCompiler
 from world.realitycheck.registry import ClaimRegistry
-from world.realitycheck.types import Claim, ExperimentSpec, RealityVerdict, VerdictKind
+from world.realitycheck.types import Claim, ExperimentSpec, RealityVerdict
 from world.realitycheck.verdict import VerdictEngine
-from world.realitycheck.protocol import ProtocolRunner, ProtocolChecklist, ProtocolVerdict
+from world.realitycheck.protocol import ProtocolRunner, ProtocolChecklist
 from world.realitycheck.verifiers import (
     AdversarialVerifier,
     BenchmarkEngine,
@@ -20,10 +20,7 @@ from world.realitycheck.verifiers import (
 
 
 class RealityAuthority:
-    """
-    NEXUS: what could be true?
-    RealityAuthority: what are we justified in treating as knowledge?
-    """
+    """NEXUS proposes; RealityAuthority decides what counts as knowledge."""
 
     def __init__(self, ledger=None):
         self.registry = ClaimRegistry()
@@ -89,7 +86,6 @@ class RealityAuthority:
         accuracy_loss: float,
         statement: str | None = None,
     ) -> RealityVerdict:
-        """End-to-end example from the blueprint (compression ≥60%, accuracy loss <2%)."""
         statement = statement or (
             "Compression reduces memory storage by 60% while retrieval accuracy decreases < 2%."
         )
@@ -98,7 +94,7 @@ class RealityAuthority:
             domain="memory",
             metrics={"compression_ratio_min": 0.60, "accuracy_loss_max": 0.02},
             baseline={"storage": 1.0, "accuracy": 1.0},
-            model_confidence=0.99,  # deliberately high — must not drive verdict
+            model_confidence=0.99,
         )
 
         def run() -> Dict[str, float]:
@@ -118,27 +114,20 @@ class RealityAuthority:
         run_fn,
         expected_fn,
         *,
-        expected_predicate: str = "",
         artifact: str = "",
         falsify_fn=None,
         model_confidence: float = 0.0,
-        interpretation: str = "",
-        speculation: str = "",
         reproduce: bool = True,
-    ) -> "ProtocolChecklist":
-        """Run the formal 15-step Reality Check Protocol on a claim."""
+    ) -> ProtocolChecklist:
         cl = self.protocol.run(
             claim_text=claim_text,
-            proposition=proposition,
+            falsifiable_proposition=proposition,
             minimum_evidence=minimum_evidence,
             run_fn=run_fn,
             expected_fn=expected_fn,
-            expected_predicate=expected_predicate,
             artifact=artifact,
             falsify_fn=falsify_fn,
             model_confidence=model_confidence,
-            interpretation=interpretation,
-            speculation=speculation,
             reproduce=reproduce,
         )
         self.protocol_history.append(cl)
