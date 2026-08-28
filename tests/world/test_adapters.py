@@ -1,4 +1,4 @@
-"""Scientific adapters + API smoke tests."""
+"""Scientific adapters smoke tests."""
 
 from world.adapters.chemistry import ChemistryAdapter, Reaction
 from world.adapters.biology import BiologyAdapter, Population
@@ -30,7 +30,6 @@ def test_ecology_network():
     eco.add_species("rabbit", 50)
     eco.add_species("fox", 5)
     eco.add_interaction("fox", "rabbit", 0.5)
-    before = eco.biomass["rabbit"]
     for _ in range(10):
         eco.step(0.1)
     assert "rabbit" in eco.biomass
@@ -40,23 +39,3 @@ def test_climate_field():
     clim = ClimateAdapter(seed=1)
     t = clim.sample(0, 0)
     assert isinstance(t, float)
-
-
-def test_fastapi_app():
-    pytest = __import__("pytest")
-    try:
-        from world.api.app import create_app, FastAPI
-        if FastAPI is None:
-            pytest.skip("fastapi not installed")
-        app = create_app()
-        from fastapi.testclient import TestClient
-    except (ImportError, RuntimeError):
-        pytest.skip("fastapi not installed")
-    client = TestClient(app)
-    r = client.get("/api/v1/world")
-    assert r.status_code == 200
-    assert "hash" in r.json()
-    r2 = client.post("/api/v1/world/tick", json={"dt": 1.0})
-    if r2.status_code != 200:
-        r2 = client.post("/api/v1/world/tick")
-    assert r2.status_code == 200

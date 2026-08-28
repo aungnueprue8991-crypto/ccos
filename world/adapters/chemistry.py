@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 
 def _q(x: float, nd: int = 8) -> float:
@@ -66,13 +66,6 @@ class ChemistryAdapter:
         for k, d in delta.items():
             self.species[k] = max(0.0, _q(self.species.get(k, 0.0) + d))
         return dict(self.species)
-
-    def equilibrium_ratio(self, left: str, right: str) -> Optional[float]:
-        a = self.species.get(left, 0.0)
-        b = self.species.get(right, 0.0)
-        if a + b <= 0:
-            return None
-        return _q(b / max(a, 1e-15))
 
     def total_mass(self) -> float:
         return _q(sum(self.species.values()))

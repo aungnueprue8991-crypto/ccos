@@ -53,34 +53,14 @@ class BiologyAdapter:
                     c.age = _q(c.age + dt)
         return out
 
-    def split_cohort(self, name: str, ages: List[float], fractions: List[float]) -> None:
-        p = self.populations[name]
-        fr = fractions or [1.0]
-        s = sum(fr) or 1.0
-        self.cohorts[name] = [
-            Cohort(age=_q(a), count=_q(p.count * (f / s)))
-            for a, f in zip(ages, fr)
-        ]
-
     def harvest(self, name: str, amount: float) -> float:
         p = self.populations[name]
         taken = min(p.count, max(0.0, amount))
         p.count = _q(p.count - taken)
         return taken
 
-    def carrying_pressure(self, name: str) -> float:
-        p = self.populations[name]
-        return _q(p.count / max(p.carrying_capacity, 1e-9))
-
     def snapshot(self) -> Dict[str, Dict[str, float]]:
         return {
-            n: {
-                "count": p.count,
-                "growth_rate": p.growth_rate,
-                "K": p.carrying_capacity,
-                "mortality": p.mortality,
-                "age_mean": p.age_mean,
-                "pressure": self.carrying_pressure(n),
-            }
+            n: {"count": p.count, "growth_rate": p.growth_rate, "K": p.carrying_capacity}
             for n, p in sorted(self.populations.items())
         }

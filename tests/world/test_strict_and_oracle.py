@@ -1,4 +1,4 @@
-"""Strict-mode capability bridge + external oracle tests."""
+"""Strict CCOS path + external oracle verification."""
 
 from __future__ import annotations
 
