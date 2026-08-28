@@ -119,7 +119,7 @@ class EventLedger:
                 with self.jsonl_path.open("a", encoding="utf-8") as f:
                     f.write(raw + "\n")
             except OSError:
-                pass  # JSONL mirror is best-effort; SQLite is authoritative
+                pass
             return event
 
     def iter_events(self) -> Iterator[EventEnvelope]:

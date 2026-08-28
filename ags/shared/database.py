@@ -228,7 +228,9 @@ class AGSDatabase:
         tables = self.fetchall(
             "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
         )
-        ver = self.fetchone("SELECT version, notes FROM schema_version ORDER BY version DESC LIMIT 1")
+        ver = self.fetchone(
+            "SELECT version, notes FROM schema_version ORDER BY version DESC LIMIT 1"
+        )
         return {
             "tables": [t["name"] for t in tables],
             "schema_version": ver["version"] if ver else 0,
