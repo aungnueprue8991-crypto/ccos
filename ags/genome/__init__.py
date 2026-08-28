@@ -1,2 +1,2 @@
-from .traits import AgentGenome, CognitiveTraits, CuriosityTraits
-from .manager import GenomeManager
+from ags.genome.traits import AgentGenome
+from ags.genome.manager import GenomeManager
