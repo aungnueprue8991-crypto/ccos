@@ -1,2 +1,2 @@
-from .curiosity import CuriosityEngine, CuriositySignal
-from .goals import Goal, GoalManager
+from ags.motivation.curiosity import CuriosityEngine, CuriositySignal
+from ags.motivation.goals import GoalManager, Goal
