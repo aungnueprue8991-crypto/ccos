@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from world.benchmarks.pool_efficiency import PoolEfficiencyBenchmark, run_pool_efficiency_benchmark
-from world.benchmarks.lateral_inhibition import competitive_select, LateralInhibitionSim
+from world.benchmarks.lateral_inhibition import competitive_select
 from world.realitycheck.authority import RealityAuthority
 from world.realitycheck.types import VerdictKind
 

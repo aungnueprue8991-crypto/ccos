@@ -13,7 +13,12 @@ def test_model_confidence_is_not_evidence():
         model_confidence=0.99,
     )
     v = auth.verify(claim, spec, run_fn=None)
-    assert v.kind in (VerdictKind.SPECULATION, VerdictKind.HYPOTHESIS, VerdictKind.INCONCLUSIVE, VerdictKind.SOURCE_SUPPORTED)
+    assert v.kind in (
+        VerdictKind.SPECULATION,
+        VerdictKind.HYPOTHESIS,
+        VerdictKind.INCONCLUSIVE,
+        VerdictKind.SOURCE_SUPPORTED,
+    )
     assert "model_confidence_ignored" in " ".join(v.notes)
 
 

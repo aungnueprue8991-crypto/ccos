@@ -1,12 +1,4 @@
-"""Pool efficiency benchmark — REAL measurements for RealityCheck.
-
-Hypothesis form:
-  Connection reuse (pooling) reduces open/connect cost by >= X% while
-  error rate increases by < Y%.
-
-This benchmark uses SQLite connect cost as a stand-in for "open connection"
-(same failure mode as AGS per-tx connect). It does NOT require network.
-"""
+"""Pool efficiency benchmark — REAL measurements for RealityCheck."""
 
 from __future__ import annotations
 
@@ -14,7 +6,6 @@ import sqlite3
 import tempfile
 import time
 from dataclasses import dataclass, asdict
-from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 
@@ -114,5 +105,4 @@ class PoolEfficiencyBenchmark:
 
 
 def run_pool_efficiency_benchmark(n_ops: int = 80) -> Dict[str, float]:
-    """Callable for RealityAuthority.verify(run_fn=...)."""
     return PoolEfficiencyBenchmark(n_ops=n_ops).run().as_realitycheck_metrics()

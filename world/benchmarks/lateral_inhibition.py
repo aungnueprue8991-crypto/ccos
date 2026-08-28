@@ -1,13 +1,4 @@
-"""Lateral inhibition — competitive dynamics (WTA-style) as a pure simulation.
-
-Biological idea: active units suppress neighbors → contrast / winner-take-all.
-Computational form: recurrent inhibition until one (or k) units dominate.
-
-Mapping to systems (hypothesis, not fact):
-  event handlers / DB connections compete under a budget the way
-  neural populations compete under inhibition — strongest demand wins,
-  others are suppressed (queued or dropped), sharpening allocation.
-"""
+"""Lateral inhibition / competitive selection dynamics."""
 
 from __future__ import annotations
 
@@ -68,5 +59,5 @@ class LateralInhibitionSim:
             "activations": step.activations,
             "allocations": alloc,
             "winner": step.winner_index,
-            "analogy": "lateral_inhibition->competitive_resource_grant",
+            "analogy": "lateral_inhibition→competitive_resource_grant",
         }
