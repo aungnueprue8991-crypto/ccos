@@ -1,7 +1,4 @@
-"""Neuroscience adapter — deterministic rate network with Hebbian plasticity.
-
-Not a brain simulator: small N, quantized state, optional energy budget.
-"""
+"""Neuroscience adapter — deterministic rate network with Hebbian plasticity."""
 
 from __future__ import annotations
 
@@ -35,7 +32,9 @@ class SimpleNeuralAdapter:
         dr = (-self.r + np.tanh(drive)) / self.tau
         self.r = _q_arr(self.r + dt * dr)
         self.t += dt
-        self.energy = float(max(0.0, self.energy - 0.001 * dt * float(np.mean(np.abs(self.r)))))
+        self.energy = float(
+            max(0.0, self.energy - 0.001 * dt * float(np.mean(np.abs(self.r))))
+        )
         if self.learning_rate > 0:
             self._hebbian(dt)
         return self.r.copy()

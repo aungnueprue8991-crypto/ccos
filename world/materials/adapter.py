@@ -1,4 +1,4 @@
-"""Materials adapter — elastic/plastic response, thermal expansion, simple phase gate."""
+"""Materials adapter — elastic/plastic response, thermal expansion."""
 
 from __future__ import annotations
 
@@ -30,23 +30,18 @@ class MaterialsAdapter:
         self.materials[mat.name] = mat
 
     def elastic_strain(self, name: str, stress: float) -> float:
-        """Pure elastic strain σ/E — does not mutate state."""
         m = self.materials[name]
         return _q(stress / max(m.young_modulus, 1e-9))
 
     def strain(self, name: str, stress: float) -> float:
-        """Total strain = elastic(σ) + accumulated plastic. Read-only w.r.t. plastic."""
         m = self.materials[name]
         return _q(self.elastic_strain(name, stress) + m.plastic_strain)
 
     def apply_stress(self, name: str, stress: float) -> float:
-        """Loading step: accumulate plastic if |σ| exceeds yield. Returns total strain."""
         m = self.materials[name]
         if abs(stress) >= m.yield_stress:
             over = abs(stress) - m.yield_stress
-            m.plastic_strain = _q(
-                m.plastic_strain + over / max(m.young_modulus, 1e-9)
-            )
+            m.plastic_strain = _q(m.plastic_strain + over / max(m.young_modulus, 1e-9))
         return self.strain(name, stress)
 
     def yields(self, name: str, stress: float) -> bool:
@@ -63,9 +58,7 @@ class MaterialsAdapter:
 
     def phase(self, name: str) -> str:
         m = self.materials[name]
-        if m.temperature >= m.melt_k:
-            return "liquid"
-        return "solid"
+        return "liquid" if m.temperature >= m.melt_k else "solid"
 
     def effective_modulus(self, name: str) -> float:
         m = self.materials[name]

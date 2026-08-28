@@ -1,21 +1,32 @@
-"""Extended world tests — replay, provenance, materials, neural, terrain."""
-
-import numpy as np
+"""Extended world modules tests."""
 
 from world.core.world import World
-from world.core.entity import Label, Transform, Velocity, Mass, Energy
+from world.core.entity import Transform, Velocity, Mass, Energy, Label
+from world.spatial.index import SpatialIndex
 from world.replay.engine import ReplayEngine
 from world.provenance.record import ProvenanceStore
 from world.materials.adapter import MaterialsAdapter, Material
 from world.neuroscience.adapter import SimpleNeuralAdapter
 from world.environment.terrain import TerrainGenerator
+import numpy as np
 
 
-def test_replay_roundtrip():
+def test_spatial_index():
+    idx = SpatialIndex()
+    idx.update(1, 0, 0)
+    idx.update(2, 1, 0)
+    idx.update(3, 10, 10)
+    near = idx.query_radius(0, 0, 2.0)
+    assert 1 in near and 2 in near
+    assert 3 not in near
+
+
+def test_replay_determinism():
     def factory():
-        w = World(seed=3)
-        w.spawn(Label("p"), Transform(0, 0, 0), Velocity(0.1, 0, 0), Mass(1), Energy(10))
+        w = World(seed=11)
+        w.spawn(Label("a", "o"), Transform(0, 1, 0), Velocity(0.1, 0, 0), Mass(1), Energy(10))
         return w
+
     w = factory()
     eng = ReplayEngine()
     rec = eng.record_run(w, ticks=5)

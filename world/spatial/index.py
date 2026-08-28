@@ -1,7 +1,10 @@
 """Spatial indexing — grid + neighborhood queries."""
+
 from __future__ import annotations
-from typing import Dict, List, Tuple, Optional
+
 import math
+from typing import Dict, List, Tuple
+
 
 class GridWorld:
     def __init__(self, width: int = 32, height: int = 32, cell: float = 1.0):
@@ -31,6 +34,7 @@ class GridWorld:
                 cell = ((cx + dx) % self.width, (cy + dy) % self.height)
                 found.extend(self.occupancy.get(cell, []))
         return list(dict.fromkeys(found))
+
 
 class SpatialIndex:
     def __init__(self):

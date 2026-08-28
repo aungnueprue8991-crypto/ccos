@@ -1,1 +1,1 @@
-from .index import SpatialIndex, GridWorld
+from world.spatial.index import SpatialIndex, GridWorld
