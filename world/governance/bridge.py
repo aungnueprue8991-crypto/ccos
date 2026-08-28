@@ -41,11 +41,7 @@ class CapabilityDecision:
 
 
 class StrictCCOSClient:
-    """Minimal CCOS client: approve only known world caps explicitly allow-listed per agent.
-
-    Use this when you want ledger-shaped decisions without a full kernel.
-    In production, replace with the real governance engine.
-    """
+    """Minimal CCOS client: approve only known world caps on an allow-list."""
 
     def __init__(self):
         self._allow: Dict[str, Set[str]] = {}
@@ -91,7 +87,6 @@ class WorldCapabilityBridge:
         self.approvals = 0
 
     def grant(self, agent_id: str, *caps: str) -> None:
-        """Local grants — ignored entirely when strict=True."""
         self.grants.setdefault(agent_id, set()).update(caps)
 
     def _allowed(self, agent_id: str, capability: str) -> bool:

@@ -55,7 +55,7 @@ class Question:
     source: str = ""
     question_id: str = field(default_factory=new_id)
     created_at: float = field(default_factory=now_ts)
-    status: str = "open"  # open | investigating | resolved
+    status: str = "open"
 
 
 @dataclass
@@ -71,4 +71,4 @@ class AgentState:
     failed_experiments: int = 0
     discoveries: int = 0
     current_goals: List[str] = field(default_factory=list)
-    status: str = "created"  # created | active | sleeping | terminated
+    status: str = "created"
