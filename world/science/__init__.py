@@ -1,1 +1,2 @@
-from .loop import ScientificCivilizationLoop, CivilizationLoopResult
+from world.science.loop import ScientificCivilizationLoop, CivilizationLoopResult
+from world.science.oracle import ThermoEquilibriumOracle

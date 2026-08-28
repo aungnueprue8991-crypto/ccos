@@ -29,13 +29,17 @@ class ThermodynamicsAdapter:
         b.temp_k = round(b.temp_k + dt, 6)
         return b.temp_k
 
-    def heat_transfer(self, a: str, b: str, k: float = 1.0, area: float = 1.0, dist: float = 1.0, dt: float = 1.0) -> None:
+    def heat_transfer(
+        self, a: str, b: str, k: float = 1.0, area: float = 1.0, dist: float = 1.0, dt: float = 1.0
+    ) -> None:
         ba, bb = self.bodies[a], self.bodies[b]
         dq = k * area * (ba.temp_k - bb.temp_k) / max(dist, 1e-9) * dt
         self.apply_heat(a, -dq)
         self.apply_heat(b, dq)
 
-    def step_pair(self, a: str, b: str, steps: int = 10, dt: float = 0.1, k: float = 50.0) -> Dict[str, float]:
+    def step_pair(
+        self, a: str, b: str, steps: int = 10, dt: float = 0.1, k: float = 50.0
+    ) -> Dict[str, float]:
         for _ in range(steps):
             self.heat_transfer(a, b, k=k, dt=dt)
         return {n: self.bodies[n].temp_k for n in (a, b)}

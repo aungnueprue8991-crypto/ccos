@@ -6,16 +6,13 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
 from world.core.world import World
-from world.core.entity import Transform, Velocity, Mass, Energy, Label
+from world.core.entity import Transform, Mass, Energy, Label
 from world.laboratory.fork import Laboratory
-from world.observation.sensors import observe_world
 from world.governance.bridge import WorldCapabilityBridge
 from world.adapters.thermodynamics import ThermodynamicsAdapter, ThermalBody
 from world.evidence.package import EvidenceBuilder, WorldEvidencePackage
 from world.provenance.record import ProvenanceStore
 from world.replay.engine import ReplayEngine
-from world.state.snapshot import take_snapshot, restore_snapshot
-from ags.shared.types import new_id
 from world.science.oracle import ThermoEquilibriumOracle
 
 
@@ -32,15 +29,11 @@ class CivilizationLoopResult:
 
 
 class ScientificCivilizationLoop:
-    """
-    Full chain:
-      intent → governance → observe → hypothesize → experiment request
-      → authorize → fork → thermo adapter → measure → evidence → ledger
-      → external oracle → discovery only if oracle accepts
-    """
+    """intent → governance → observe → experiment → evidence → oracle → ledger"""
 
-    def __init__(self, seed: int = 42):
+    def __init__(self, seed: int = 42, strict: bool = False, ccos: Any = None):
         self.seed = seed
+        self.strict = strict
         self.world = World(seed=seed, name="civ-loop")
         self.world.spawn(
             Label("lab-bench", "apparatus"),
@@ -54,41 +47,50 @@ class ScientificCivilizationLoop:
             Mass(1.0),
             Energy(50.0),
         )
-        self.bridge = WorldCapabilityBridge(self.world)
+        self.bridge = WorldCapabilityBridge(self.world, ccos=ccos, strict=strict)
         self.lab = Laboratory(self.world)
         self.provenance = ProvenanceStore()
         self.replay = ReplayEngine()
         self.ledger: List[Dict[str, Any]] = []
         self.knowledge: List[str] = []
+        self._ccos = ccos
 
     def _grant_scientist(self, agent_id: str) -> None:
-        self.bridge.grant(
-            agent_id,
-            "world.observe",
-            "world.experiment",
-            "world.fork",
-            "world.tick",
-        )
+        caps = ("world.observe", "world.experiment", "world.fork", "world.tick")
+        if self.strict and self._ccos is not None and hasattr(self._ccos, "allow"):
+            self._ccos.allow(agent_id, *caps)
+        else:
+            self.bridge.grant(agent_id, *caps)
 
-    def run_thermodynamics_experiment(self, agent_id: str = "scientist-1") -> CivilizationLoopResult:
+    def run_thermodynamics_experiment(
+        self, agent_id: str = "scientist-1"
+    ) -> CivilizationLoopResult:
         self._grant_scientist(agent_id)
         live_before = self.world.hash()
         tick_start = self.world.tick_count
 
         obs = self.bridge.observe(agent_id, noise=0.02)
         if obs is None:
-            return CivilizationLoopResult(False, None, None, live_before, live_before, "", notes="observe denied")
+            return CivilizationLoopResult(
+                False, None, None, live_before, live_before, "", notes="observe denied"
+            )
 
-        hypothesis = "Heat flows from hot body to cold body until temperatures equalize (Q=mcΔT)."
+        hypothesis = (
+            "Heat flows from hot body to cold body until temperatures equalize (Q=mcΔT)."
+        )
         prediction = {"final_temps_converge": True, "delta_t_shrinks": True}
 
         builder = EvidenceBuilder(self.world.name, self.seed)
         builder.record_action({"type": "observe", "agent": agent_id})
         builder.record_action({"type": "hypothesis", "text": hypothesis})
 
-        exp = self.bridge.request_experiment(agent_id, ticks=5, interventions=[{"entity_id": 1, "energy": 80.0}])
+        exp = self.bridge.request_experiment(
+            agent_id, ticks=5, interventions=[{"entity_id": 1, "energy": 80.0}]
+        )
         if exp is None:
-            return CivilizationLoopResult(False, None, None, live_before, self.world.hash(), "", notes="experiment denied")
+            return CivilizationLoopResult(
+                False, None, None, live_before, self.world.hash(), "", notes="experiment denied"
+            )
 
         builder.record_action({"type": "experiment", "id": exp.experiment_id})
 
@@ -104,7 +106,10 @@ class ScientificCivilizationLoop:
         builder.record_action({"type": "thermo_step", "final": finals})
 
         live_after = self.world.hash()
-        assert live_after == live_before or True
+        if live_after != live_before:
+            raise AssertionError(
+                f"world experiment mutated live state: before={live_before} after={live_after}"
+            )
 
         pkg = builder.build(
             experiment_id=exp.experiment_id,

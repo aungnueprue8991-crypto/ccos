@@ -1,9 +1,4 @@
-"""External oracles — independent verification outside the agent's internal loop.
-
-A discovery is not real until something *outside* the experiment path agrees.
-These oracles do not use World fork state or adapter internal mutable caches
-as the sole authority; they recompute from declared inputs.
-"""
+"""External oracles — independent verification outside the agent's internal loop."""
 
 from __future__ import annotations
 
@@ -29,8 +24,6 @@ class ExternalOracle(Protocol):
 
 
 class ThermoEquilibriumOracle:
-    """Independent check of two-body thermal equilibration via energy conservation."""
-
     oracle_id = "thermo_equilibrium_v1"
 
     def __init__(self, tol_k: float = 2.0):
@@ -80,18 +73,13 @@ class ThermoEquilibriumOracle:
             oracle_id=self.oracle_id,
             accepted=ok,
             score=round(score, 4),
-            summary=(
-                f"independent T_eq={t_eq:.4f}K; "
-                + ("ACCEPTED" if ok else "REJECTED")
-            ),
+            summary=f"independent T_eq={t_eq:.4f}K; " + ("ACCEPTED" if ok else "REJECTED"),
             details={"t_eq": t_eq, "errors_k": errors, "tol_k": self.tol_k},
             independent=True,
         )
 
 
 class MassConservationOracle:
-    """Chemistry mass check from declared stoichiometry vs reported species totals."""
-
     oracle_id = "mass_conservation_v1"
 
     def verify(self, claim: Dict[str, Any]) -> OracleVerdict:
@@ -110,7 +98,7 @@ class MassConservationOracle:
         )
 
 
-def default_oracles() -> Dict[str, Any]:
+def default_oracles() -> Dict[str, ExternalOracle]:
     return {
         ThermoEquilibriumOracle.oracle_id: ThermoEquilibriumOracle(),
         MassConservationOracle.oracle_id: MassConservationOracle(),

@@ -1,1 +1,1 @@
-from .record import ProvenanceStore
+from .record import ProvenanceStore, ProvenanceRecord
