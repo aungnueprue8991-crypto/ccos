@@ -18,8 +18,8 @@ class ClaimKind(str, Enum):
 
 
 class VerdictKind(str, Enum):
-    SPECULATION = "SPECULATION"  # not tested
-    HYPOTHESIS = "HYPOTHESIS"  # formulated, untested
+    SPECULATION = "SPECULATION"
+    HYPOTHESIS = "HYPOTHESIS"
     SOURCE_SUPPORTED = "SOURCE-SUPPORTED"
     PARTIALLY_SUPPORTED = "PARTIALLY-SUPPORTED"
     IMPLEMENTATION_VERIFIED = "IMPLEMENTATION-VERIFIED"
@@ -40,7 +40,7 @@ class Claim:
     variables: List[str] = field(default_factory=list)
     assumptions: List[str] = field(default_factory=list)
     source: str = "nexus"
-    confidence_model: float = 0.0  # model confidence — NOT evidence
+    confidence_model: float = 0.0
     created_at: float = field(default_factory=now_ts)
     parent_id: Optional[str] = None
     meta: Dict[str, Any] = field(default_factory=dict)

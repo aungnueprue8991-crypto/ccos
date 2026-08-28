@@ -1,8 +1,4 @@
-"""REALITY CHECK PROTOCOL — formal 15-step checklist object.
-
-Every material claim must pass through this structure.
-AI assertions are never evidence (rules 11–12).
-"""
+"""REALITY CHECK PROTOCOL — formal 15-step checklist object."""
 
 from __future__ import annotations
 
@@ -21,9 +17,8 @@ class ProtocolVerdict(str, Enum):
 
 @dataclass
 class LayerSeparation:
-    """Rule 10 — never collapse these layers."""
     observation: str = ""
-    source_report: str = ""  # not evidence by itself
+    source_report: str = ""
     implementation_verification: str = ""
     independent_reproduction: str = ""
     interpretation: str = ""
@@ -35,34 +30,10 @@ class LayerSeparation:
 
 @dataclass
 class ProtocolChecklist:
-    """
-    The 15-step Reality Check Protocol as a first-class object.
-
-    Steps:
-      1  falsifiable proposition
-      2  minimum evidence required
-      3  inspect artifact
-      4  execute relevant code
-      5  compare observed vs expected
-      6  measure performance (do not accept reported)
-      7  reproduce independently
-      8  attempt to falsify
-      9  search contradictory evidence
-      10 separate observation/source/impl/repro/interp/speculation
-      11 never treat AI assertion as evidence
-      12 never VERIFIED because another AI agrees
-      13 report only evidence-supported observations
-      14 insufficient evidence → UNVERIFIED
-      15 contradictory evidence → FALSIFIED
-    """
-
     checklist_id: str = field(default_factory=new_id)
     claim_text: str = ""
-    # Step 1
     falsifiable_proposition: str = ""
-    # Step 2
     minimum_evidence: str = ""
-    # Steps 3–9
     artifact_inspected: str = ""
     execution_ran: bool = False
     execution_error: str = ""
@@ -75,13 +46,10 @@ class ProtocolChecklist:
     falsification_attempt: str = ""
     falsification_result: str = ""
     contradictory_evidence: str = ""
-    # Step 10
     layers: LayerSeparation = field(default_factory=LayerSeparation)
-    # Steps 11–12 guards
     ai_assertion_used_as_evidence: bool = False
     ai_agreement_used_as_verification: bool = False
-    model_confidence: float = 0.0  # recorded, never decisive
-    # Steps 13–15
+    model_confidence: float = 0.0
     evidence_sufficient: bool = False
     verdict: ProtocolVerdict = ProtocolVerdict.UNVERIFIED
     notes: List[str] = field(default_factory=list)
@@ -93,7 +61,6 @@ class ProtocolChecklist:
         return d
 
     def finalize(self) -> "ProtocolChecklist":
-        """Apply rules 11–15 to set verdict from recorded fields only."""
         self.notes = list(self.notes)
         if self.ai_assertion_used_as_evidence or self.ai_agreement_used_as_verification:
             self.notes.append("rule_11_12_violation: AI assertion/agreement cannot verify")
@@ -133,55 +100,40 @@ class ProtocolChecklist:
             self.evidence_sufficient = True
             self.verdict = ProtocolVerdict.VERIFIED
             self.notes.append("steps_1_15_satisfied")
-            if self.falsification_result:
-                self.notes.append(f"falsify_probe={self.falsification_result[:80]}")
             return self
 
         self.evidence_sufficient = False
         self.verdict = ProtocolVerdict.UNVERIFIED
-        self.notes.append("rule_14: comparison incomplete → UNVERIFIED")
+        self.notes.append("rule_14: comparison inconclusive")
         return self
 
 
 class ProtocolRunner:
-    """
-    Execute the 15-step protocol for a claim.
-
-    run_fn:        () -> observed measurements (dict or scalar)
-    expected_fn:   (observed) -> bool
-    falsify_fn:    optional () -> str description of probe result
-    """
+    """Execute the 15-step protocol against a callable claim."""
 
     def run(
         self,
         claim_text: str,
-        proposition: str,
+        falsifiable_proposition: str,
         minimum_evidence: str,
         run_fn: Callable[[], Any],
         expected_fn: Callable[[Any], bool],
-        expected_predicate: str = "",
+        *,
         artifact: str = "",
-        falsify_fn: Optional[Callable[[], str]] = None,
-        model_confidence: float = 0.0,
-        interpretation: str = "",
-        speculation: str = "",
         reproduce: bool = True,
+        falsify_fn: Optional[Callable[[], Any]] = None,
+        model_confidence: float = 0.0,
     ) -> ProtocolChecklist:
         cl = ProtocolChecklist(
             claim_text=claim_text,
-            falsifiable_proposition=proposition,
+            falsifiable_proposition=falsifiable_proposition,
             minimum_evidence=minimum_evidence,
             artifact_inspected=artifact,
-            expected_predicate=expected_predicate or proposition,
+            expected_predicate=getattr(expected_fn, "__name__", str(expected_fn)),
             model_confidence=model_confidence,
-            ai_assertion_used_as_evidence=False,
-            ai_agreement_used_as_verification=False,
         )
-        cl.layers.speculation = speculation or "none — AI narrative not used as evidence"
-        cl.layers.source_report = "not used as evidence"
-        cl.layers.interpretation = interpretation
+        cl.layers.speculation = claim_text
 
-        # Steps 3–4
         try:
             observed = run_fn()
             cl.execution_ran = True
@@ -196,14 +148,12 @@ class ProtocolRunner:
             cl.layers.implementation_verification = "FAIL"
             return cl.finalize()
 
-        # Step 5–6
         try:
             cl.comparison_pass = bool(expected_fn(observed))
         except Exception as e:
             cl.comparison_pass = None
             cl.notes.append(f"comparison_error:{e}")
 
-        # Step 7
         if reproduce:
             try:
                 obs2 = run_fn()
@@ -230,7 +180,6 @@ class ProtocolRunner:
                 cl.reproduction_pass = False
                 cl.layers.independent_reproduction = f"FAIL:{e}"
 
-        # Steps 8–9
         if falsify_fn is not None:
             try:
                 cl.falsification_attempt = "ran"
@@ -240,9 +189,7 @@ class ProtocolRunner:
                 cl.falsification_result = f"{type(e).__name__}: {e}"
         else:
             cl.falsification_attempt = "not_attempted"
-            cl.falsification_result = ""
 
-        # model confidence recorded but must not decide (rules 11–12)
         if model_confidence and model_confidence > 0.9 and not cl.execution_ran:
             cl.notes.append("high_model_confidence_ignored")
 

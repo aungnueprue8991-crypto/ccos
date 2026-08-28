@@ -1,55 +1,54 @@
-"""Verdict Engine — combine verifier results into epistemic status.
-
-CONFIDENCE ≠ EVIDENCE. Model confidence never upgrades verdict alone.
-"""
+"""VerdictEngine — combine verifier results into RealityVerdict."""
 
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import Any, Optional
 
 from world.realitycheck.types import Claim, RealityVerdict, VerdictKind
-from world.realitycheck.verifiers import VerifyResult
 
 
 class VerdictEngine:
     def decide(
         self,
         claim: Claim,
-        code: Optional[VerifyResult] = None,
-        reproduction: Optional[VerifyResult] = None,
-        adversarial: Optional[VerifyResult] = None,
-        source: Optional[VerifyResult] = None,
-        benchmark: Optional[VerifyResult] = None,
+        code: Any = None,
+        reproduction: Any = None,
+        adversarial: Any = None,
+        source: Any = None,
+        benchmark: Any = None,
     ) -> RealityVerdict:
-        notes: List[str] = []
-        chain: List[str] = []
+        chain = []
+        notes = []
         measurements = {}
         criteria_met = {}
 
         if code:
             chain.append(f"code:{code.passed}")
-            measurements.update(code.measurements)
-            notes.extend(code.notes)
+            measurements.update(getattr(code, "measurements", {}) or {})
+            notes.extend(getattr(code, "notes", []) or [])
         if reproduction:
             chain.append(f"reproduction:{reproduction.passed}")
-            measurements.update({f"repro_{k}": v for k, v in reproduction.measurements.items()})
-            notes.extend(reproduction.notes)
+            measurements.update(
+                {f"repro_{k}": v for k, v in (getattr(reproduction, "measurements", {}) or {}).items()}
+            )
+            notes.extend(getattr(reproduction, "notes", []) or [])
         if adversarial:
             chain.append(f"adversarial:{adversarial.passed}")
-            notes.extend(adversarial.notes)
+            notes.extend(getattr(adversarial, "notes", []) or [])
         if source:
             chain.append(f"source:{source.passed}")
-            measurements["source_support"] = source.measurements.get("source_support", 0.0)
-            notes.extend(source.notes)
+            measurements["source_support"] = getattr(source, "measurements", {}).get("source_support", 0.0)
+            notes.extend(getattr(source, "notes", []) or [])
         if benchmark:
             chain.append(f"benchmark:{benchmark.passed}")
-            measurements.update(benchmark.measurements)
+            measurements.update(getattr(benchmark, "measurements", {}) or {})
 
-        # Explicit: ignore claim.confidence_model for verdict kind
         notes.append(f"model_confidence_ignored={claim.confidence_model}")
 
         kind = VerdictKind.INCONCLUSIVE
-        if code and code.passed and reproduction and reproduction.passed and (adversarial is None or adversarial.passed):
+        if code and code.passed and reproduction and reproduction.passed and (
+            adversarial is None or adversarial.passed
+        ):
             kind = VerdictKind.REPRODUCTION_VERIFIED
         elif code and code.passed and (adversarial is None or adversarial.passed):
             kind = VerdictKind.IMPLEMENTATION_VERIFIED
@@ -63,11 +62,6 @@ class VerdictEngine:
             kind = VerdictKind.SPECULATION
         elif not code:
             kind = VerdictKind.HYPOTHESIS
-
-        # criteria map from code notes if present
-        for n in notes:
-            if n.startswith("criteria="):
-                criteria_met["parsed"] = True
 
         return RealityVerdict(
             claim_id=claim.claim_id,

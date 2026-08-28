@@ -10,7 +10,7 @@ from world.realitycheck.types import Claim, RealityVerdict, VerdictKind
 class ClaimRegistry:
     def __init__(self):
         self.claims: Dict[str, Claim] = {}
-        self.verdicts: Dict[str, RealityVerdict] = {}  # claim_id -> latest
+        self.verdicts: Dict[str, RealityVerdict] = {}
 
     def register(self, claim: Claim) -> Claim:
         self.claims[claim.claim_id] = claim
@@ -33,7 +33,6 @@ class ClaimRegistry:
         return out
 
     def knowledge_only(self) -> List[Claim]:
-        """Only implementation-verified or reproduction-verified claims."""
         allowed = {
             VerdictKind.IMPLEMENTATION_VERIFIED,
             VerdictKind.REPRODUCTION_VERIFIED,
