@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-import logging
 import time
 from dataclasses import dataclass, field
 from typing import Any, Dict, Optional
-
-log = logging.getLogger("ags.memory.working")
 
 
 @dataclass
@@ -59,7 +56,9 @@ class WorkingMemory:
             return "Working memory is empty."
         now = time.time()
         lines = ["Current working memory:"]
-        for key, item in sorted(self._items.items(), key=lambda x: x[1].activation(now), reverse=True):
+        for key, item in sorted(
+            self._items.items(), key=lambda x: x[1].activation(now), reverse=True
+        ):
             lines.append(f"  [{key}]: {str(item.value)[:120]}")
         return "\n".join(lines)
 

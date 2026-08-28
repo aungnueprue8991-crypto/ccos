@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -10,13 +9,14 @@ if TYPE_CHECKING:
     from ags.memory.episodic import EpisodicStore
     from ags.memory.semantic import SemanticMemory
 
-log = logging.getLogger("ags.memory.consolidation")
-
 
 class MemoryConsolidator:
     def __init__(
-        self, working: "WorkingMemory", episodic: "EpisodicStore",
-        semantic: "SemanticMemory", consolidation_rate: float = 0.5,
+        self,
+        working: "WorkingMemory",
+        episodic: "EpisodicStore",
+        semantic: "SemanticMemory",
+        consolidation_rate: float = 0.5,
     ):
         self.working = working
         self.episodic = episodic
@@ -37,7 +37,8 @@ class MemoryConsolidator:
                         content=str(value.get("description", value))[:200],
                         domain=str(value.get("domain", "general")),
                         confidence=min(0.7, importance),
-                        source="working_memory", source_type="observation",
+                        source="working_memory",
+                        source_type="observation",
                     )
                     promoted += 1
         if self._cycle % 5 == 0:
@@ -53,7 +54,8 @@ class MemoryConsolidator:
                     content=f"When: {ep.description[:80]} → Result: {ep.outcome[:80]}",
                     domain="procedural_history",
                     confidence=0.5 + ep.emotional_valence * 0.2,
-                    source="sleep_consolidation", source_type="inference",
+                    source="sleep_consolidation",
+                    source_type="inference",
                 )
                 promoted += 1
         return promoted

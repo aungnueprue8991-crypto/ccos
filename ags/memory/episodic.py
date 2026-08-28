@@ -2,13 +2,10 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any, Dict, List, Optional
 
 from ags.shared.database import get_db, jdump, jload
 from ags.shared.types import EpisodicMemory, new_id, now_ts
-
-log = logging.getLogger("ags.memory.episodic")
 
 
 class EpisodicStore:
@@ -18,8 +15,13 @@ class EpisodicStore:
         self.db = get_db(db_path) if db_path else get_db()
 
     def record(
-        self, description: str, context: Optional[Dict] = None, outcome: str = "",
-        valence: float = 0.0, importance: float = 0.5, tags: Optional[List[str]] = None,
+        self,
+        description: str,
+        context: Optional[Dict] = None,
+        outcome: str = "",
+        valence: float = 0.0,
+        importance: float = 0.5,
+        tags: Optional[List[str]] = None,
         goal_id: Optional[str] = None,
     ) -> str:
         ep_id = new_id()
@@ -32,8 +34,17 @@ class EpisodicStore:
                    (episode_id, agent_id, description, context, outcome,
                     valence, importance, tags, created_at)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                (ep_id, self.agent_id, description, jdump(ctx), outcome,
-                 valence, importance, jdump(tags or []), now_ts()),
+                (
+                    ep_id,
+                    self.agent_id,
+                    description,
+                    jdump(ctx),
+                    outcome,
+                    valence,
+                    importance,
+                    jdump(tags or []),
+                    now_ts(),
+                ),
             )
         self._enforce_capacity()
         return ep_id
@@ -94,9 +105,13 @@ class EpisodicStore:
 
     def _row_to_ep(self, row: Dict) -> EpisodicMemory:
         return EpisodicMemory(
-            episode_id=row["episode_id"], agent_id=row["agent_id"],
-            description=row["description"], context=jload(row.get("context"), {}),
-            outcome=row.get("outcome") or "", emotional_valence=row.get("valence") or 0.0,
-            importance=row.get("importance") or 0.5, tags=jload(row.get("tags"), []),
+            episode_id=row["episode_id"],
+            agent_id=row["agent_id"],
+            description=row["description"],
+            context=jload(row.get("context"), {}),
+            outcome=row.get("outcome") or "",
+            emotional_valence=row.get("valence") or 0.0,
+            importance=row.get("importance") or 0.5,
+            tags=jload(row.get("tags"), []),
             timestamp=row.get("created_at") or 0.0,
         )
