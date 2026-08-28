@@ -1,1 +1,1 @@
-from .runtime import SafeSandbox, SandboxResult
+from ags.sandbox.runtime import SafeSandbox, SandboxResult

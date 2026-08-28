@@ -1,1 +1,1 @@
-from .agent import AGSAgent
+from ags.core.agent import AGSAgent

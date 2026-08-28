@@ -1,1 +1,1 @@
-from .skill import Skill, SkillRegistry
+from ags.skills.skill import Skill, SkillRegistry
