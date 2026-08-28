@@ -1,4 +1,4 @@
-"""AGSAgent — developmental organism with genome, memory, curiosity."""
+"""AGSAgent — developmental organism with genome, memory, curiosity, discovery."""
 
 from __future__ import annotations
 
@@ -20,6 +20,8 @@ from ags.motivation.curiosity import CuriosityEngine
 from ags.motivation.goals import GoalManager
 from ags.skills.skill import SkillRegistry
 from ags.sandbox.runtime import SafeSandbox
+from ags.discovery.engine import DiscoveryEngine
+from ags.learning.engine import LearningEngine
 
 
 class AGSAgent:
@@ -77,6 +79,14 @@ class AGSAgent:
         self.goals = GoalManager(self.agent_id)
         self.skills = SkillRegistry(self.agent_id, db_path=str(db_path))
         self.sandbox = SafeSandbox()
+        self.discovery = DiscoveryEngine(self.model, self.sandbox, self.skills)
+        self.learning = LearningEngine(
+            self.semantic,
+            self.self_model,
+            self.episodic,
+            self.skills,
+            learning_rate=genome.learning.learning_rate,
+        )
 
         self.state = AgentState(
             agent_id=self.agent_id,
@@ -87,7 +97,6 @@ class AGSAgent:
         self._open_questions: List[Question] = []
 
     def perceive(self, observations: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Ingest observations → WM, world model, curiosity, questions."""
         self.working.update_from_observation({"batch": observations})
         for obs in observations:
             entity = str(obs.get("entity", "unknown"))
@@ -132,6 +141,37 @@ class AGSAgent:
             "prediction_errors": len(pred_errors),
         }
 
+    def investigate(self, question: Optional[str] = None) -> Dict[str, Any]:
+        """One discovery cycle: hypothesis → experiment design → sandbox check → learn."""
+        if question is None:
+            if not self._open_questions:
+                return {"status": "no_open_questions"}
+            q = max(self._open_questions, key=lambda x: x.urgency)
+            question = q.text
+        ctx = "\n".join([
+            self.working.get_context_summary(),
+            self.semantic.get_context_for_llm(limit=5),
+            self.world.get_context_for_llm(),
+        ])
+        hyp = self.discovery.form_hypothesis(question, ctx)
+        plan = self.discovery.design_experiment(hyp)
+        code = plan.get("code") or ""
+        run = self.discovery.run_sandbox_check(code)
+        learned = self.learning.from_experiment(
+            hyp,
+            success=bool(run.get("success")),
+            evidence_id=str(run.get("sandbox_id", "")),
+            skill_name="run_python_snippet" if run.get("success") else None,
+        )
+        self.consolidate()
+        return {
+            "question": question,
+            "hypothesis": hyp,
+            "plan": plan,
+            "run": run,
+            "learned": learned,
+        }
+
     def consolidate(self) -> int:
         return self.consolidator.consolidate(self.agent_id)
 
@@ -147,4 +187,6 @@ class AGSAgent:
             "skills": self.skills.count(),
             "open_questions": len(self._open_questions),
             "goals": len(self.goals.active()),
+            "hypotheses": len(self.discovery.hypotheses),
+            "experiments": len(self.discovery.experiments),
         }

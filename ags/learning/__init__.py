@@ -1,1 +1,1 @@
-from .engine import LearningEngine
+from ags.learning.engine import LearningEngine

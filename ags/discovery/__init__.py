@@ -1,1 +1,1 @@
-from .engine import DiscoveryEngine
+from ags.discovery.engine import DiscoveryEngine

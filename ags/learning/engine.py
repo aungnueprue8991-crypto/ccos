@@ -1,8 +1,7 @@
-"""Learning engine — knowledge, skills, strategy, self-model updates from experience."""
+"""Learning engine — update knowledge, self-model, skills from outcomes."""
 
 from __future__ import annotations
 
-import logging
 from typing import Any, Dict, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -10,8 +9,6 @@ if TYPE_CHECKING:
     from ags.memory.self_model import SelfModel
     from ags.memory.episodic import EpisodicStore
     from ags.skills.skill import SkillRegistry
-
-log = logging.getLogger("ags.learning")
 
 
 class LearningEngine:
@@ -30,10 +27,12 @@ class LearningEngine:
         self.learning_rate = learning_rate
 
     def from_experiment(
-        self, hypothesis: Dict[str, Any], success: bool, evidence_id: str,
+        self,
+        hypothesis: Dict[str, Any],
+        success: bool,
+        evidence_id: str,
         skill_name: Optional[str] = None,
     ) -> Dict[str, Any]:
-        """Update knowledge, self-model, optional skill after experiment outcome."""
         conf = float(hypothesis.get("confidence", 0.5))
         new_conf = conf + self.learning_rate * ((0.9 if success else 0.1) - conf)
         self.semantic.store(
@@ -62,10 +61,17 @@ class LearningEngine:
             importance=0.7,
             tags=["learning", "experiment"],
         )
-        return {"confidence": new_conf, "skill": skill.name if skill else None, "success": success}
+        return {
+            "confidence": new_conf,
+            "skill": skill.name if skill else None,
+            "success": success,
+        }
 
     def from_observation(self, content: str, domain: str, confidence: float) -> str:
         return self.semantic.store(
-            content=content, domain=domain, confidence=confidence,
-            source="observation", source_type="observation",
+            content=content,
+            domain=domain,
+            confidence=confidence,
+            source="observation",
+            source_type="observation",
         )
