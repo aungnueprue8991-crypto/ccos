@@ -1,0 +1,46 @@
+version: "1.0"
+default: deny
+risk_levels:
+  0: { name: read_internal, action: auto }
+  1: { name: read_permitted, action: auto_audit }
+  2: { name: web_retrieval, action: auto_audit }
+  3: { name: sandbox_write, action: auto }
+  4: { name: candidate_memory, action: realitycheck_required }
+  5: { name: external_code_or_deps, action: sandbox_required }
+  6: { name: production_or_policy, action: approval_required }
+  7: { name: external_side_effect, action: approval_required }
+tools:
+  tool.filesystem.read:
+    risk: 1
+    action: auto_audit
+    network: disabled
+  tool.memory.retrieve:
+    risk: 0
+    action: auto
+    network: disabled
+  tool.web.search:
+    risk: 2
+    action: auto_audit
+    network: enabled
+  tool.python.execute:
+    risk: 3
+    action: sandbox_required
+    network: disabled
+  tool.benchmark:
+    risk: 2
+    action: auto_audit
+    network: disabled
+  tool.memory.promote:
+    risk: 4
+    action: realitycheck_required
+    network: disabled
+  tool.production.write:
+    risk: 6
+    action: approval_required
+    network: disabled
+  tool.external.message:
+    risk: 7
+    action: approval_required
+    network: enabled
+approval_threshold: 6
+emergency_stop_blocks_all: true

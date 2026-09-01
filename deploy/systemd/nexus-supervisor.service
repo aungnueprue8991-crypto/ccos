@@ -1,0 +1,30 @@
+[Unit]
+Description=NEXUS x CCOS Supervisor
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=nexus
+Group=nexus
+WorkingDirectory=/opt/nexus
+Environment=NEXUS_HOME=/var/lib/nexus
+Environment=NEXUS_DATA=/var/lib/nexus/data
+Environment=PYTHONPATH=/opt/nexus
+EnvironmentFile=-/var/lib/nexus/.env
+ExecStartPre=/usr/bin/mkdir -p /var/lib/nexus/data/workflows /var/lib/nexus/logs
+ExecStart=/usr/bin/python3 -m apps.launcher start --interval 10
+Restart=always
+RestartSec=5
+CPUQuota=200%
+MemoryMax=4G
+NoNewPrivileges=true
+ProtectSystem=strict
+PrivateTmp=true
+ReadWritePaths=/var/lib/nexus /tmp
+ReadOnlyPaths=/opt/nexus
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
