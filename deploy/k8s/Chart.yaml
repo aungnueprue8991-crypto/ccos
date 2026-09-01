@@ -1,0 +1,13 @@
+apiVersion: v2
+name: nexus-ccos
+description: NEXUS x CCOS research-agent runtime (production chart)
+type: application
+version: 0.3.0
+appVersion: "0.3.0"
+keywords:
+  - nexus
+  - ccos
+  - agents
+  - research
+maintainers:
+  - name: nexus-team
